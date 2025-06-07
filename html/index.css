@@ -1,31 +1,231 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later */
+/*
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ * CSS para Visor de Sensores - Diseño Moderno y Discreto
+ * Autor: [Tu Nombre/Alias, opcional]
+ * Fecha: Junio 2025
+ */
+
+/* --- Base y Tipografía --- */
+:root {
+    /* Colores */
+    --color-primary: #007bff; /* Azul vibrante para elementos interactivos */
+    --color-secondary: #6c757d; /* Gris para textos secundarios/bordes */
+    --color-background: #f8f9fa; /* Fondo muy claro */
+    --color-surface: #ffffff; /* Fondo de contenedores principales */
+    --color-text-dark: #212529; /* Texto principal oscuro */
+    --color-text-light: #ffffff; /* Texto claro (botones, etc.) */
+    --color-border: #dee2e6; /* Bordes suaves */
+    --color-shadow: rgba(0, 0, 0, 0.08); /* Sombra sutil */
+
+    /* Tipografía */
+    --font-family-body: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    --font-size-base: 16px;
+    --line-height-base: 1.6;
+
+    /* Espaciado */
+    --spacing-xs: 8px;
+    --spacing-sm: 12px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+}
+
 body {
-  background-color: white;
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    color: var(--color-text-dark);
+    background-color: var(--color-background);
+    margin: 0;
+    padding: var(--spacing-xl); /* Padding general para el cuerpo */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centrar contenido principal */
+    min-height: 100vh;
 }
 
 h1 {
-  color: navy;
-  margin-left: 20px;
+    font-size: 2.5em; /* Más grande para el título principal */
+    color: var(--color-primary); /* Color de acento para el título */
+    margin-bottom: var(--spacing-xl);
+    text-align: center;
+    font-weight: 600; /* Un poco más de peso */
 }
 
-.txt {
-  margin-top: 1px;
+p.txt {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: var(--color-text-dark);
+    margin-bottom: var(--spacing-sm);
+    text-align: center;
+}
+
+/* --- Contenedores Principales --- */
+#divMenu {
+    background-color: var(--color-surface);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px var(--color-shadow);
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-wrap: wrap; /* Permitir que los elementos se envuelvan en pantallas pequeñas */
+    gap: var(--spacing-md); /* Espacio entre los elementos del menú */
+    justify-content: center;
+    margin-bottom: var(--spacing-xl);
+    width: 100%;
+    max-width: 800px; /* Limitar el ancho máximo del menú */
+}
+
+#tablas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-lg);
+    justify-content: center;
+    margin-bottom: var(--spacing-xl);
+    width: 100%;
+    max-width: 1000px;
 }
 
 .tabla {
-  float: left;
-  border: 2px solid gray;
-  padding: 5px;
-  margin: 5px;
-  text-align: left;
-  border-radius: 15px;
+    flex: 1; /* Permitir que las tablas ocupen el espacio disponible */
+    min-width: 280px; /* Ancho mínimo antes de que se envuelvan */
+    background-color: var(--color-surface);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px var(--color-shadow);
+    padding: var(--spacing-md);
+    text-align: left; /* Alinear el texto de las tablas a la izquierda */
+    overflow-x: auto; /* Para tablas que puedan ser más anchas */
 }
 
-.tablaTot {
-  border-collapse: collapse;
-  float: left;
-  border: 2px solid red;
-  padding: 5px;
-  margin: 5px;
-  text-align: left;
+#divChart {
+    background-color: var(--color-surface);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px var(--color-shadow);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+    width: 100%;
+    max-width: 1000px;
+    box-sizing: border-box; /* Incluir padding en el ancho total */
+}
+
+/* --- Botones --- */
+button {
+    background-color: var(--color-primary);
+    color: var(--color-text-light);
+    border: none;
+    border-radius: 5px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    flex-shrink: 0; /* Evitar que los botones se encojan */
+}
+
+button:hover {
+    background-color: #0056b3; /* Un azul más oscuro al pasar el ratón */
+    transform: translateY(-2px); /* Efecto sutil de levantamiento */
+}
+
+button:active {
+    background-color: #004085; /* Un azul aún más oscuro al hacer clic */
+    transform: translateY(0);
+}
+
+/* --- Selectores (Dropdowns) --- */
+select {
+    padding: var(--spacing-sm);
+    /* Aumenta el padding-right para hacer espacio para la flecha */
+    padding-right: var(--spacing-xl); /* Era var(--spacing-sm); ahora es var(--spacing-xl) */
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background-color: var(--color-surface);
+    color: var(--color-text-dark);
+    font-size: 1em;
+    cursor: pointer;
+    appearance: none; /* Eliminar estilo nativo del sistema operativo */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23212529" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>'); /* Flecha personalizada */
+    background-repeat: no-repeat;
+    /* Ajusta la posición para que la flecha esté al final del padding derecho */
+    background-position: right var(--spacing-sm) center; /* Mantener este padding para la posición de la flecha */
+    background-size: 1em;
+    flex-shrink: 0;
+}
+
+select:focus {
+    border-color: var(--color-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25); /* Sombra de enfoque */
+}
+
+/* --- Tablas --- */
+table {
+    width: 100%;
+    border-collapse: collapse; /* Bordes de celdas unificados */
+    margin-top: var(--spacing-md);
+    font-size: 0.95em; /* Ligeramente más pequeño para datos */
+}
+
+table th, table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+}
+
+table th {
+    background-color: var(--color-background); /* Fondo para encabezados */
+    font-weight: 600;
+    color: var(--color-text-dark);
+    position: sticky; /* Encabezado fijo al desplazar */
+    top: 0;
+    z-index: 1; /* Asegurar que esté sobre el contenido al desplazar */
+}
+
+table tr:hover {
+    background-color: #f1f1f1; /* Resaltar filas al pasar el ratón */
+}
+
+/* Ajustes específicos para la tabla de resumen (si tiene pocas filas) */
+#tableSumG td, #tableSumS td {
+    white-space: nowrap; /* Evitar que el texto se rompa */
+}
+
+/* --- Gráfico --- */
+#myChart {
+    /* Chart.js maneja su propio tamaño interno, esto es para el contenedor */
+    max-width: 100%;
+    height: auto; /* Altura automática basada en el contenido */
+    display: block; /* Eliminar espacio extra debajo del lienzo */
+}
+
+/* --- Responsividad Básica --- */
+@media (max-width: 768px) {
+    body {
+        padding: var(--spacing-md);
+    }
+
+    h1 {
+        font-size: 2em;
+    }
+
+    #divMenu, #tablas {
+        flex-direction: column; /* Apilar elementos en pantallas pequeñas */
+        align-items: stretch; /* Estirar elementos para ocupar todo el ancho */
+    }
+
+    button, select {
+        width: 100%; /* Botones y selectores de ancho completo */
+        box-sizing: border-box; /* Incluir padding/border en el ancho */
+    }
+
+    .tabla {
+        min-width: unset; /* Eliminar ancho mínimo */
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: var(--spacing-sm);
+    }
 }

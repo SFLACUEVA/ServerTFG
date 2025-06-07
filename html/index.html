@@ -9,7 +9,7 @@
     <h1>Visor de sensoressss</h1>
 
     <div id="divMenu">
-
+        <button id="btRefresh" onclick="refresca()">Refrescar lista!</button>
         <button id="btConsulta" onclick="consulta()">Consultar!</button>
         <button id="btDescargar" onclick="descargar()">Descargar!</button>
         <select name="Selector" id="selCant">
@@ -54,10 +54,9 @@
         }
 
         var magnitudes = [];
-        magnitudes.push(new magnitud("Temperatura", "C"));
-        magnitudes.push(new magnitud("Humedad", "%"));
-        magnitudes.push(new magnitud("Co2", "PPM"));
-        magnitudes.push(new magnitud("tVOC", "PPB"));
+        magnitudes.push(new magnitud("Temperature", "C"));
+        magnitudes.push(new magnitud("Current", "A"));
+        magnitudes.push(new magnitud("Voltage", "V"));
 
         var speedCanvas = document.getElementById("myChart");
         var lineChart = new Chart(speedCanvas, {
@@ -66,20 +65,7 @@
 
         var arrSummary = new Array();
 
-        consulta();
-
-        function toggle() {
-            console.log("toggleado");
-            var cosa = document.getElementById("myChart");
-            //cosa.style.opacity=0;
-
-            if (cosa.style.height !== "0px") {
-                cosa.style.height = "0px";
-            } else {
-                cosa.style.height = "100%";
-            }
-            console.log(cosa.style.height);
-        }
+       
 
 
         function getMax(input) {
@@ -106,18 +92,6 @@
             return out;
         }
 
-        function getAvg(input) {
-            let media = 0;
-            for (let i = 0; i < input.length; i++) {
-                media += input[i];
-            }
-            media = media / input.length;
-            media = Math.trunc(media * 100) / 100;
-            return media;
-        }
-
-
-
         function MAX() {
             let mag = document.getElementById("selMed").value;
             let num = document.getElementById("selCant").value;
@@ -126,7 +100,7 @@
                 respuesta = this.responseText;
 
                 arrSummary.push(respuesta);
-                AVG();
+
 
             }
             rqMax.open("GET", "accesoDB.php?t=u&m=" + mag + "&c=" + num);
@@ -135,116 +109,20 @@
 
         }
 
-        function AVG() {
-            let mag = document.getElementById("selMed").value;
-            let num = document.getElementById("selCant").value;
-
-            const rqAvg = new XMLHttpRequest();
-            rqAvg.onload = function () {
-                respuesta = this.responseText;
-                arrSummary.push(respuesta);
-                MIN();
-
-            }
-            rqAvg.open("GET", "accesoDB.php?t=a&m=" + mag + "&c=" + num);
-            rqAvg.send();
-
+        function refresca() {
+            print(getTables())
         }
 
+        function getTables() {
 
-        function MIN() {
-            let mag = document.getElementById("selMed").value;
-            let num = document.getElementById("selCant").value;
-            const rqMin = new XMLHttpRequest();
-            rqMin.onload = function () {
+            tables = []
+            const getTables = new XMLHttpRequest();
+            rqTabla.onload = function () {
                 respuesta = this.responseText;
-                arrSummary.push(respuesta);
-                START();
-
+                print(respuesta)
             }
-            rqMin.open("GET", "accesoDB.php?t=l&m=" + mag + "&c=" + num);
-            rqMin.send();
-        }
-
-
-        function START() {
-            let mag = document.getElementById("selMed").value;
-            let num = document.getElementById("selCant").value;
-
-
-            const rqStart = new XMLHttpRequest();
-            rqStart.onload = function () {
-                respuesta = this.responseText;
-                arrSummary.push(respuesta);
-                ENDING();
-            }
-            rqStart.open("GET", "accesoDB.php?t=s&m=" + mag + "&c=" + num);
-            rqStart.send();
-
-        }
-
-
-        function ENDING() {
-
-            let mag = document.getElementById("selMed").value;
-            let num = document.getElementById("selCant").value;
-            const rqEnd = new XMLHttpRequest();
-            rqEnd.onload = function () {
-                respuesta = this.responseText;
-                arrSummary.push(respuesta);
-
-                let tabSumEl = ["Max:", "Avg:", "Min:", "Start:", "End:"];
-                let tResumen = document.getElementById("tableSumG");
-                tResumen.innerHTML = "";
-
-                arrSummary[1] = (Math.trunc(Number(arrSummary[1]) * 100) / 100).toString();
-                let unit = "";
-                switch (mag) {
-                    case "t":
-                        unit = 0;
-                        break;
-
-                    case "h":
-                        unit = 1;
-                        break;
-
-                    case "c":
-                        unit = 2;
-                        break;
-
-                    case "p":
-                        unit = 3;
-                        break;
-
-                    default:
-                    // code block
-                }
-
-                for (let i = 0; i < 3; i++) {
-                    arrSummary[i] = arrSummary[i] + magnitudes[unit].unidad;
-                }
-
-                let indice = tResumen.insertRow(0);
-                for (let i = 0; i < tabSumEl.length; i++) {
-
-                    let indice = tResumen.insertRow(i);
-
-                    let cellindex = indice.insertCell(0);
-                    cellindex.innerHTML = tabSumEl[i];
-
-                    cellindex = indice.insertCell(-1);
-                    cellindex.innerHTML = arrSummary[i];
-
-                }
-
-
-            }
-
-
-
-            rqEnd.open("GET", "accesoDB.php?t=f&m=" + mag + "&c=" + num);
-            rqEnd.send();
-
+            rqTabla.open("GET", "measures.php?f=t");
+            rqTabla.send();
 
 
         }
@@ -252,9 +130,6 @@
         function consulta() {
 
             let mag = document.getElementById("selMed").value;
-            let num = document.getElementById("selCant").value;
-            //console.log(mag);
-            //console.log(num);
             var respuesta;
             arrSummary = [];
 
@@ -281,13 +156,8 @@
 
             var rows = texto.split("#");
             var celda = [];
-            //indv.push(["id_mesura","id_sensor","Valor","Data"]);  
-            //console.log(valores);
             var table = document.getElementById("tableT");
             table.innerHTML = "";
-
-
-
 
             let rowsInv= rows.toReversed();
 
@@ -305,10 +175,8 @@
                 }
 
             }
-
+            /*
             let prim = table.insertRow(0);
-
-
             let cell3 = prim.insertCell(0);
             cell3.innerHTML = "Fecha";
 
@@ -319,10 +187,12 @@
             cell3.innerHTML = "ID_Sens";
             cell3 = prim.insertCell(0);
             cell3.innerHTML = "ID_Med";
+            */
 
             return celda;
 
         }
+        
 
         function updateGraph(datos) {
             //console.table(datos);
@@ -494,57 +364,6 @@
 
 
 
-        }
-
-
-        function getnum() {
-            console.log("Numero pedido");
-            const xmlhttp = new XMLHttpRequest();
-
-            xmlhttp.onload = function () {
-                var valores = this.responseText;
-                var lineas = valores.split("#");
-                var indv = []
-                //indv.push(["id_mesura","id_sensor","Valor","Data"]);  
-                console.log(valores);
-                var table = document.getElementById("table");
-                table.innerHTML = "";
-
-                for (let i = 0; i < lineas.length; i++) {
-
-                    indv.push(lineas[i].split("|"));
-
-                    var row = table.insertRow(i);
-
-                    for (let j = 0; j < 4; j++) {
-
-                        var cell1 = row.insertCell(j);
-                        cell1.innerHTML = "HOLA";
-                        cell1.innerHTML = indv[i][j];
-                    }
-
-                }
-
-                console.table(indv);
-                updateGraph(indv);
-            }
-
-            xmlhttp.open("GET", "prueba.php?q=0&v=1");
-            xmlhttp.send();
-        }
-
-
-        function gettext() {
-            console.log("Texto pedido");
-            const xmlhttp = new XMLHttpRequest();
-            xmlhttp.onload = function () {
-                document.getElementById("test").innerHTML = this.responseText;
-            }
-
-            var act = document.getElementById("test").innerHTML;
-
-            xmlhttp.open("GET", "prueba.php?q=" + act);
-            xmlhttp.send();
         }
 
 
