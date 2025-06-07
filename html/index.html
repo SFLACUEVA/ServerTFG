@@ -1,0 +1,578 @@
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<!DOCTYPE html>
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+
+<link rel="stylesheet" href="index.css">
+
+<body>
+    <h1>Visor de sensoressss</h1>
+
+    <div id="divMenu">
+
+        <button id="btConsulta" onclick="consulta()">Consultar!</button>
+        <button id="btDescargar" onclick="descargar()">Descargar!</button>
+        <select name="Selector" id="selCant">
+            <option value="10">Ultimos 10</option>
+            <option value="24">Ultimos 24</option>
+            <option value="100">Ultimos 100</option>
+            <option value="-1">Todos</option>
+        </select>
+        <select name="Selector" id="selMed">
+            <option value="t">Temperatura</option>
+            <option value="h">Humedad</option>
+            <option value="c">CO2</option>
+            <option value="p">tVOC</option>
+        </select>
+    </div>
+    <div id="tablas">
+
+        <div class="tabla">
+            <p class="txt">Resumen global</p>
+            <table id="tableSumG"></table>
+        </div>
+        <div class="tabla">
+            <p class="txt">Resumen seleccion</p>
+            <table id="tableSumS"></table>
+        </div>
+    </div>
+
+    <div id="divChart" style="width:100%;max-width:1000px">
+        <canvas id="myChart"></canvas>
+    </div>
+    <table class="tabla" id="tableT"></table>
+
+    <script>
+
+        var valCSV;
+
+        class magnitud {
+            constructor(nombre, unidad) {
+                this.nombre = nombre;
+                this.unidad = unidad;
+            }
+        }
+
+        var magnitudes = [];
+        magnitudes.push(new magnitud("Temperatura", "C"));
+        magnitudes.push(new magnitud("Humedad", "%"));
+        magnitudes.push(new magnitud("Co2", "PPM"));
+        magnitudes.push(new magnitud("tVOC", "PPB"));
+
+        var speedCanvas = document.getElementById("myChart");
+        var lineChart = new Chart(speedCanvas, {
+            type: 'line'
+        });
+
+        var arrSummary = new Array();
+
+        consulta();
+
+        function toggle() {
+            console.log("toggleado");
+            var cosa = document.getElementById("myChart");
+            //cosa.style.opacity=0;
+
+            if (cosa.style.height !== "0px") {
+                cosa.style.height = "0px";
+            } else {
+                cosa.style.height = "100%";
+            }
+            console.log(cosa.style.height);
+        }
+
+
+        function getMax(input) {
+            var out = input[0];
+
+            for (let i = 0; i < input.length; i++) {
+                if (out < input[i]) {
+                    out = input[i];
+                }
+
+            }
+            return out;
+        }
+
+        function getMin(input) {
+            var out = input[0];
+
+            for (let i = 0; i < input.length; i++) {
+                if (out > input[i]) {
+                    out = input[i];
+                }
+
+            }
+            return out;
+        }
+
+        function getAvg(input) {
+            let media = 0;
+            for (let i = 0; i < input.length; i++) {
+                media += input[i];
+            }
+            media = media / input.length;
+            media = Math.trunc(media * 100) / 100;
+            return media;
+        }
+
+
+
+        function MAX() {
+            let mag = document.getElementById("selMed").value;
+            let num = document.getElementById("selCant").value;
+            const rqMax = new XMLHttpRequest();
+            rqMax.onload = function () {
+                respuesta = this.responseText;
+
+                arrSummary.push(respuesta);
+                AVG();
+
+            }
+            rqMax.open("GET", "accesoDB.php?t=u&m=" + mag + "&c=" + num);
+            rqMax.send();
+
+
+        }
+
+        function AVG() {
+            let mag = document.getElementById("selMed").value;
+            let num = document.getElementById("selCant").value;
+
+            const rqAvg = new XMLHttpRequest();
+            rqAvg.onload = function () {
+                respuesta = this.responseText;
+                arrSummary.push(respuesta);
+                MIN();
+
+            }
+            rqAvg.open("GET", "accesoDB.php?t=a&m=" + mag + "&c=" + num);
+            rqAvg.send();
+
+        }
+
+
+        function MIN() {
+            let mag = document.getElementById("selMed").value;
+            let num = document.getElementById("selCant").value;
+            const rqMin = new XMLHttpRequest();
+            rqMin.onload = function () {
+                respuesta = this.responseText;
+                arrSummary.push(respuesta);
+                START();
+
+            }
+            rqMin.open("GET", "accesoDB.php?t=l&m=" + mag + "&c=" + num);
+            rqMin.send();
+        }
+
+
+        function START() {
+            let mag = document.getElementById("selMed").value;
+            let num = document.getElementById("selCant").value;
+
+
+            const rqStart = new XMLHttpRequest();
+            rqStart.onload = function () {
+                respuesta = this.responseText;
+                arrSummary.push(respuesta);
+                ENDING();
+            }
+            rqStart.open("GET", "accesoDB.php?t=s&m=" + mag + "&c=" + num);
+            rqStart.send();
+
+        }
+
+
+        function ENDING() {
+
+            let mag = document.getElementById("selMed").value;
+            let num = document.getElementById("selCant").value;
+            const rqEnd = new XMLHttpRequest();
+            rqEnd.onload = function () {
+                respuesta = this.responseText;
+                arrSummary.push(respuesta);
+
+                let tabSumEl = ["Max:", "Avg:", "Min:", "Start:", "End:"];
+                let tResumen = document.getElementById("tableSumG");
+                tResumen.innerHTML = "";
+
+                arrSummary[1] = (Math.trunc(Number(arrSummary[1]) * 100) / 100).toString();
+                let unit = "";
+                switch (mag) {
+                    case "t":
+                        unit = 0;
+                        break;
+
+                    case "h":
+                        unit = 1;
+                        break;
+
+                    case "c":
+                        unit = 2;
+                        break;
+
+                    case "p":
+                        unit = 3;
+                        break;
+
+                    default:
+                    // code block
+                }
+
+                for (let i = 0; i < 3; i++) {
+                    arrSummary[i] = arrSummary[i] + magnitudes[unit].unidad;
+                }
+
+                let indice = tResumen.insertRow(0);
+                for (let i = 0; i < tabSumEl.length; i++) {
+
+                    let indice = tResumen.insertRow(i);
+
+                    let cellindex = indice.insertCell(0);
+                    cellindex.innerHTML = tabSumEl[i];
+
+                    cellindex = indice.insertCell(-1);
+                    cellindex.innerHTML = arrSummary[i];
+
+                }
+
+
+            }
+
+
+
+            rqEnd.open("GET", "accesoDB.php?t=f&m=" + mag + "&c=" + num);
+            rqEnd.send();
+
+
+
+        }
+
+        function consulta() {
+
+            let mag = document.getElementById("selMed").value;
+            let num = document.getElementById("selCant").value;
+            //console.log(mag);
+            //console.log(num);
+            var respuesta;
+            arrSummary = [];
+
+
+
+            const rqTabla = new XMLHttpRequest();
+            rqTabla.onload = function () {
+                respuesta = this.responseText;
+                updateGraph(toArray(respuesta));
+                MAX();
+            }
+            rqTabla.open("GET", "accesoDB.php?t=t&m=" + mag + "&c=" + num);
+            rqTabla.send();
+
+
+        }
+
+
+
+
+
+
+        function toArray(texto) {
+
+            var rows = texto.split("#");
+            var celda = [];
+            //indv.push(["id_mesura","id_sensor","Valor","Data"]);  
+            //console.log(valores);
+            var table = document.getElementById("tableT");
+            table.innerHTML = "";
+
+
+
+
+            let rowsInv= rows.toReversed();
+
+            for (let i = 0; i < rows.length; i++) {
+
+                celda.push(rows[i].split("|"));
+                let linea = rowsInv[i].split("|");
+
+                let row = table.insertRow(i);
+                for (let j = 0; j < 4; j++) {
+
+                    var cell1 = row.insertCell(j);
+                    cell1.innerHTML = "HOLA";
+                    cell1.innerHTML = linea[j];
+                }
+
+            }
+
+            let prim = table.insertRow(0);
+
+
+            let cell3 = prim.insertCell(0);
+            cell3.innerHTML = "Fecha";
+
+            cell3 = prim.insertCell(0);
+            cell3.innerHTML = "Valor";
+
+            cell3 = prim.insertCell(0);
+            cell3.innerHTML = "ID_Sens";
+            cell3 = prim.insertCell(0);
+            cell3.innerHTML = "ID_Med";
+
+            return celda;
+
+        }
+
+        function updateGraph(datos) {
+            //console.table(datos);
+
+            valCSV = datos;
+
+            var sel = document.getElementById("selCant");
+            var sel2 = document.getElementById("selMed").value;
+
+            switch (sel2) {
+                case "t":
+                    sel2 = 0;
+                    break;
+
+                case "h":
+                    sel2 = 1;
+                    break;
+
+                case "c":
+                    sel2 = 2;
+                    break;
+
+                case "p":
+                    sel2 = 3;
+                    break;
+
+                default:
+                // code block
+            }
+
+            var cant = Number(sel.value);
+            var trunc = 1;
+            var pad = 0.1;
+            var step = 2;
+            var magnitud = magnitudes[sel2].nombre;
+            var unidad = magnitudes[sel2].unidad;
+
+            console.log("grafico actulizado");
+            var xValues = [];
+            var yValues = [];
+            for (var i = 0; i < datos.length; i++) {
+                xValues.push(datos[i][3]);
+                yValues.push(Number(datos[i][2]));
+            }
+            let avg = getAvg(yValues);
+            var max = getMax(yValues);
+            var min = getMin(yValues);
+            var margen = 0.1 * (max - min);
+            var arriba = max + margen;
+            var abajo = min - margen;
+
+            arriba = Math.ceil(arriba / trunc) * trunc;
+            abajo = Math.floor(abajo / trunc) * trunc;
+
+
+            var medidas = {
+                label: magnitud,
+                data: yValues,
+                lineTension: 0.2,
+                fill: false,
+                borderColor: 'grey'
+            };
+
+            var arrMax = [];
+            var arrMin = [];
+            var arrAvg = [];
+            for (let i = 0; i < yValues.length; i++) {
+                arrMax.push(max);
+                arrMin.push(min);
+                arrAvg.push(avg);
+            }
+
+
+
+            var avgD = {
+                label: "Media",
+                data: arrAvg,
+                lineTension: 0,
+                fill: false,
+                backgroundColor: "rgba(0,0,0,0)",
+                borderWidth: 3,
+                pointBackgroundColor: "rgba(0,0,0,0)",
+                pointRadius: 0,
+
+                pointHoverRadius: 0,
+                borderColor: "rgba(100,100,100,0.3)"
+            };
+
+
+            var maxD = {
+                label: "Maximo",
+                data: arrMax,
+                lineTension: 0,
+                fill: false,
+                backgroundColor: "rgba(0,0,0,0)",
+                borderWidth: 3,
+                pointBackgroundColor: "rgba(0,0,0,0)",
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                borderColor: "rgba(255,0,0,0.3)"
+            };
+
+            var minD = {
+                label: "Minimo",
+                data: arrMin,
+                lineTension: 0,
+                fill: false,
+                backgroundColor: "rgba(0,0,0,0)",
+                borderWidth: 3,
+                pointBackgroundColor: "rgba(0,0,0,0)",
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                borderColor: "rgba(0,0,255,0.3)"
+            };
+
+            var speedData = {
+                labels: xValues,
+                datasets: [medidas, maxD, minD, avgD]
+            };
+
+            var chartOptions = {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            min: abajo, max: arriba, stepSize: trunc / step, callback: (val) => {
+                                return val + unidad;
+                            }
+                        }
+                    }]
+                }
+            };
+
+
+            var speedCanvas = document.getElementById("myChart");
+            lineChart.options = chartOptions;
+            lineChart.data = speedData;
+            lineChart.update();
+
+            //actualizar tabla seleccion
+
+
+            let tabSumEl = ["Max:", "Avg:", "Min:", "Start:", "End:"];
+            let tResumen = document.getElementById("tableSumS");
+            tResumen.innerHTML = "";
+            let cosas = [];
+            cosas.push(max.toString() + magnitudes[sel2].unidad);
+            cosas.push(avg.toString() + magnitudes[sel2].unidad);
+            cosas.push(min.toString() + magnitudes[sel2].unidad);
+            cosas.push(xValues[0]);
+            cosas.push(xValues[xValues.length - 1]);
+            //console.log(cosas);
+
+
+
+            let indice = tResumen.insertRow(0);
+            for (let i = 0; i < tabSumEl.length; i++) {
+
+                let indice = tResumen.insertRow(i);
+
+                let cellindex = indice.insertCell(0);
+                cellindex.innerHTML = tabSumEl[i];
+
+                cellindex = indice.insertCell(-1);
+                cellindex.innerHTML = cosas[i];
+
+            }
+
+
+
+
+
+        }
+
+
+        function getnum() {
+            console.log("Numero pedido");
+            const xmlhttp = new XMLHttpRequest();
+
+            xmlhttp.onload = function () {
+                var valores = this.responseText;
+                var lineas = valores.split("#");
+                var indv = []
+                //indv.push(["id_mesura","id_sensor","Valor","Data"]);  
+                console.log(valores);
+                var table = document.getElementById("table");
+                table.innerHTML = "";
+
+                for (let i = 0; i < lineas.length; i++) {
+
+                    indv.push(lineas[i].split("|"));
+
+                    var row = table.insertRow(i);
+
+                    for (let j = 0; j < 4; j++) {
+
+                        var cell1 = row.insertCell(j);
+                        cell1.innerHTML = "HOLA";
+                        cell1.innerHTML = indv[i][j];
+                    }
+
+                }
+
+                console.table(indv);
+                updateGraph(indv);
+            }
+
+            xmlhttp.open("GET", "prueba.php?q=0&v=1");
+            xmlhttp.send();
+        }
+
+
+        function gettext() {
+            console.log("Texto pedido");
+            const xmlhttp = new XMLHttpRequest();
+            xmlhttp.onload = function () {
+                document.getElementById("test").innerHTML = this.responseText;
+            }
+
+            var act = document.getElementById("test").innerHTML;
+
+            xmlhttp.open("GET", "prueba.php?q=" + act);
+            xmlhttp.send();
+        }
+
+
+        function descargar() {
+
+
+            //consulta();
+
+            const csvContent = "data:text/csv;charset=utf-8," + valCSV.map(row => row.join(",")).join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            let s1 = document.getElementById("selCant").value;
+            let s2 = document.getElementById("selMed").value;
+            console.log(s1, s2);
+            let name = "informe_" + s2 + "_" + s1 + ".csv";
+            link.setAttribute("download", name);
+            document.body.appendChild(link);
+            link.click(); // This will download the CSV file named "products.csv". 
+            link.remove();
+
+
+
+        }
+
+
+    </script>
+
+</body>
+
+</html>

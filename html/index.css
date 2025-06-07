@@ -1,0 +1,31 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+body {
+  background-color: white;
+}
+
+h1 {
+  color: navy;
+  margin-left: 20px;
+}
+
+.txt {
+  margin-top: 1px;
+}
+
+.tabla {
+  float: left;
+  border: 2px solid gray;
+  padding: 5px;
+  margin: 5px;
+  text-align: left;
+  border-radius: 15px;
+}
+
+.tablaTot {
+  border-collapse: collapse;
+  float: left;
+  border: 2px solid red;
+  padding: 5px;
+  margin: 5px;
+  text-align: left;
+}
