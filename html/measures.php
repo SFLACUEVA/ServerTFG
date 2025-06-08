@@ -42,8 +42,8 @@ try {
             while ($row = $results->fetchArray()) {
 
                 for ($i = 0; $i < 16; $i++) {
-                    if($i==15) {$res = $res . $row[$i]. '#';}
-                    else {$res = $res . $row[$i]. '|';}
+                    $res = $res . $row[$i];
+                    if($i!=15) {$res = $res.'|';}
                 }
             }
             $db->close();

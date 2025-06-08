@@ -16,14 +16,13 @@
         </select>
     </div>
     <div id="tablas">
-
         <div class="tabla">
-            <p class="txt">Resumen global</p>
-            <table id="tableSumG"></table>
+            <p class="txt">Charge summary</p>
+            <table id="tableSum"></table>
         </div>
         <div class="tabla">
-            <p class="txt">Resumen seleccion</p>
-            <table id="tableSumS"></table>
+            <p class="txt">Charge configuration</p>
+            <table id="tableConfig"></table>
         </div>
     </div>
 
@@ -127,12 +126,10 @@
         function consulta() {
             let val = [];
             let tabla = document.getElementById("selTab").value;
-            console.log(typeof tabla)
             const getVal = new XMLHttpRequest();
             getVal.onload = function () {
                 respuesta = this.responseText;
                 valores = toArray(respuesta);
-                console.log(valores)
                 getSum(valores,tabla);
             }
             getVal.open("GET", "measures.php?f=v&t="+tabla);
@@ -145,10 +142,77 @@
             const getsum = new XMLHttpRequest();
             getsum.onload = function () {
                 respuesta = this.responseText;
-                console.log(respuesta)
+                let sum = respuesta.split("|")
+                updateUI(sum,valores)
             }
             getsum.open("GET", "measures.php?f=s&t="+tabla);
             getsum.send();
+        }
+
+        function updateUI(sum,val){
+            console.table(val)
+            console.log(sum)
+            let tablaResumen = document.getElementById("tableSum");
+            tablaResumen.innerHTML="";
+            let tablaConfig = document.getElementById("tableConfig");
+            tablaConfig.innerHTML="";
+
+            let labels = ["Start:", "Stop:", "Voltage range:", "Current range:", "Temperature range:"];
+            let values = [];
+
+            let startVal = sum[1]; 
+            let stopVal = sum[2]; 
+            let voltageRangeVal = sum[10]+"-"+sum[9]+"V"; 
+            let currentRangeVal = sum[12]+"-"+sum[11]+"A";   
+            let temperatureRangeVal = sum[14]+"-"+sum[13]+"C"; 
+
+            values.push(startVal);
+            values.push(stopVal);
+            values.push(voltageRangeVal);
+            values.push(currentRangeVal);
+            values.push(temperatureRangeVal);
+
+            for (let i = 0; i < labels.length; i++) {
+                let row = tableSum.insertRow(i);
+
+                let labelCell = row.insertCell(0);
+                labelCell.textContent = labels[i];
+
+                let valueCell = row.insertCell(1);
+                valueCell.textContent = values[i];
+            }
+
+
+            labels = ["Battery name:", "Max voltage:", "Max current:", "Min current:", "Max temperature:","Temp compensation:"];
+            values = [];
+
+            name = sum[0]; 
+            vMax = sum[4]+"V"; 
+            iMax = sum[5]+"A";
+            iMin = sum[6]+"A"; 
+            ct = sum[8]+"mV/C"; 
+            tMax = sum[7]+"C"; 
+
+
+            values.push(name);
+            values.push(vMax);
+            values.push(iMax);
+            values.push(iMin);
+            values.push(ct);
+            values.push(tMax);
+
+            for (let i = 0; i < labels.length; i++) {
+                let row = tablaConfig.insertRow(i);
+
+                let labelCell = row.insertCell(0);
+                labelCell.textContent = labels[i];
+
+                let valueCell = row.insertCell(1);
+                valueCell.textContent = values[i];
+            }
+
+
+
         }
 
         function toArray(texto) {
