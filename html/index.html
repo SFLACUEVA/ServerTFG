@@ -6,23 +6,13 @@
 <link rel="stylesheet" href="index.css">
 
 <body>
-    <h1>Visor de sensoressss</h1>
+    <h1>Battery charge monitoring station</h1>
 
     <div id="divMenu">
         <button id="btRefresh" onclick="refresca()">Refrescar lista!</button>
         <button id="btConsulta" onclick="consulta()">Consultar!</button>
         <button id="btDescargar" onclick="descargar()">Descargar!</button>
-        <select name="Selector" id="selCant">
-            <option value="10">Ultimos 10</option>
-            <option value="24">Ultimos 24</option>
-            <option value="100">Ultimos 100</option>
-            <option value="-1">Todos</option>
-        </select>
-        <select name="Selector" id="selMed">
-            <option value="t">Temperatura</option>
-            <option value="h">Humedad</option>
-            <option value="c">CO2</option>
-            <option value="p">tVOC</option>
+        <select name="Selector" id="selTab">
         </select>
     </div>
     <div id="tablas">
@@ -64,7 +54,7 @@
         });
 
         var arrSummary = new Array();
-
+        refresca();
        
 
 
@@ -110,70 +100,65 @@
         }
 
         function refresca() {
-            print(getTables())
-        }
-
-        function getTables() {
-
+            
             tables = []
             const getTables = new XMLHttpRequest();
-            rqTabla.onload = function () {
+            getTables.onload = function () {
                 respuesta = this.responseText;
-                print(respuesta)
+                tables = respuesta.split("|");
+                tables.pop();
+                console.log(tables);
+                let selTab = document.getElementById("selTab");
+                
+                for (let i = 0; i < tables.length; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = tables[i];
+                    opt.text = tables[i];
+                    selTab.add(opt);
+                }
+
             }
-            rqTabla.open("GET", "measures.php?f=t");
-            rqTabla.send();
+            getTables.open("GET", "measures.php?f=t");
+            getTables.send();
 
 
         }
 
         function consulta() {
-
-            let mag = document.getElementById("selMed").value;
-            var respuesta;
-            arrSummary = [];
-
-
-
-            const rqTabla = new XMLHttpRequest();
-            rqTabla.onload = function () {
+            let val = [];
+            let tabla = document.getElementById("selTab").value;
+            console.log(typeof tabla)
+            const getVal = new XMLHttpRequest();
+            getVal.onload = function () {
                 respuesta = this.responseText;
-                updateGraph(toArray(respuesta));
-                MAX();
+                valores = toArray(respuesta);
+                console.log(valores)
+                getSum(valores,tabla);
             }
-            rqTabla.open("GET", "accesoDB.php?t=t&m=" + mag + "&c=" + num);
-            rqTabla.send();
+            getVal.open("GET", "measures.php?f=v&t="+tabla);
+            getVal.send();
 
 
         }
 
-
-
-
-
+        function getSum(valores,tabla){
+            const getsum = new XMLHttpRequest();
+            getsum.onload = function () {
+                respuesta = this.responseText;
+                console.log(respuesta)
+            }
+            getsum.open("GET", "measures.php?f=s&t="+tabla);
+            getsum.send();
+        }
 
         function toArray(texto) {
 
             var rows = texto.split("#");
             var celda = [];
-            var table = document.getElementById("tableT");
-            table.innerHTML = "";
-
-            let rowsInv= rows.toReversed();
-
+            rows.pop()
             for (let i = 0; i < rows.length; i++) {
 
                 celda.push(rows[i].split("|"));
-                let linea = rowsInv[i].split("|");
-
-                let row = table.insertRow(i);
-                for (let j = 0; j < 4; j++) {
-
-                    var cell1 = row.insertCell(j);
-                    cell1.innerHTML = "HOLA";
-                    cell1.innerHTML = linea[j];
-                }
-
             }
             /*
             let prim = table.insertRow(0);
@@ -193,7 +178,6 @@
 
         }
         
-
         function updateGraph(datos) {
             //console.table(datos);
 
@@ -366,7 +350,6 @@
 
         }
 
-
         function descargar() {
 
 
@@ -388,7 +371,6 @@
 
 
         }
-
 
     </script>
 
