@@ -29,7 +29,7 @@
     <div id="divChart" style="width:100%;max-width:1000px">
         <canvas id="myChart"></canvas>
     </div>
-    <table class="tabla" id="tableT"></table>
+    <table class="tabla" id="tableVal"></table>
 
     <script>
 
@@ -130,6 +130,7 @@
             getVal.onload = function () {
                 respuesta = this.responseText;
                 valores = toArray(respuesta);
+                valCSV = valores;
                 getSum(valores,tabla);
             }
             getVal.open("GET", "measures.php?f=v&t="+tabla);
@@ -156,15 +157,18 @@
             tablaResumen.innerHTML="";
             let tablaConfig = document.getElementById("tableConfig");
             tablaConfig.innerHTML="";
+            let tablaValores= document.getElementById("tableVal");
+            tablaValores.innerHTML="";
+            
 
             let labels = ["Start:", "Stop:", "Voltage range:", "Current range:", "Temperature range:"];
             let values = [];
 
             let startVal = sum[1]; 
             let stopVal = sum[2]; 
-            let voltageRangeVal = sum[10]+"-"+sum[9]+"V"; 
-            let currentRangeVal = sum[12]+"-"+sum[11]+"A";   
-            let temperatureRangeVal = sum[14]+"-"+sum[13]+"C"; 
+            let voltageRangeVal = sum[10]+"-"+sum[9]+" V"; 
+            let currentRangeVal = sum[12]+"-"+sum[11]+" A";   
+            let temperatureRangeVal = sum[14]+"-"+sum[13]+" C"; 
 
             values.push(startVal);
             values.push(stopVal);
@@ -187,11 +191,11 @@
             values = [];
 
             name = sum[0]; 
-            vMax = sum[4]+"V"; 
-            iMax = sum[5]+"A";
-            iMin = sum[6]+"A"; 
-            ct = sum[8]+"mV/C"; 
-            tMax = sum[7]+"C"; 
+            vMax = sum[4]+" V"; 
+            iMax = sum[5]+" A";
+            iMin = sum[6]+" A"; 
+            ct = sum[8]+" mV/C"; 
+            tMax = sum[7]+" C"; 
 
 
             values.push(name);
@@ -213,6 +217,46 @@
 
 
 
+  
+            let cabecera = tablaValores.insertRow();
+            let thTime = document.createElement('th');
+            thTime.textContent = 'Time';
+            cabecera.appendChild(thTime);
+
+            let thVoltage = document.createElement('th');
+            thVoltage.textContent = 'Voltage';
+            cabecera.appendChild(thVoltage);
+
+            let thCurrent = document.createElement('th');
+            thCurrent.textContent = 'Current';
+            cabecera.appendChild(thCurrent);
+
+            let thTemperature = document.createElement('th');
+            thTemperature.textContent = 'Temperature';
+            cabecera.appendChild(thTemperature);
+
+            for (let i = 0; i < val.length; i++) {
+                let fila = tablaValores.insertRow();
+
+                let hCell = fila.insertCell();
+                hCell.textContent = val[i][0];
+
+                let vCell = fila.insertCell();
+                vCell.textContent = val[i][1]+" V";
+
+                let cCell = fila.insertCell();
+                cCell.textContent = val[i][2]+" A";
+
+                let tCell = fila.insertCell();
+                tCell.textContent = val[i][3]+" C";
+
+            }
+
+            updateChartBat(val)
+            
+            
+            
+
         }
 
         function toArray(texto) {
@@ -224,20 +268,6 @@
 
                 celda.push(rows[i].split("|"));
             }
-            /*
-            let prim = table.insertRow(0);
-            let cell3 = prim.insertCell(0);
-            cell3.innerHTML = "Fecha";
-
-            cell3 = prim.insertCell(0);
-            cell3.innerHTML = "Valor";
-
-            cell3 = prim.insertCell(0);
-            cell3.innerHTML = "ID_Sens";
-            cell3 = prim.insertCell(0);
-            cell3.innerHTML = "ID_Med";
-            */
-
             return celda;
 
         }
@@ -413,6 +443,164 @@
 
 
         }
+        
+        // ... (Your existing JavaScript code) ...
+
+// You already have the global lineChart variable defined:
+// var speedCanvas = document.getElementById("myChart");
+// var lineChart = new Chart(speedCanvas, {
+//     type: 'line'
+// });
+
+// Make sure getAvg is defined
+        function getAvg(arr) {
+            if (!Array.isArray(arr) || arr.length === 0) return 0; // Handle empty/invalid arrays
+            const sum = arr.reduce((a, b) => a + b, 0);
+            return sum / arr.length;
+        }
+        
+        // --- NEW FUNCTION: updateChartBat ---
+        function updateChartBat(dataArray) {
+            console.log("Updating chart with Battery data:", dataArray);
+        
+            if (!Array.isArray(dataArray) || dataArray.length === 0) {
+                console.warn("No data array provided to updateChartBat.");
+                lineChart.data.labels = [];
+                lineChart.data.datasets = [];
+                lineChart.update();
+                return;
+            }
+        
+            let timeLabels = [];
+            let voltageData = [];
+            let currentData = [];
+        
+            // Extract data from the provided array
+            // Assuming dataArray rows are: [TIME, Voltage, Current, Temperature]
+            dataArray.forEach(row => {
+                timeLabels.push(row[0]); // TIME
+                voltageData.push(Number(row[1])); // Voltage
+                currentData.push(Number(row[2])); // Current
+                // Temperature is row[3], but we won't plot it in this function
+            });
+        
+            // --- Prepare Chart.js datasets ---
+            let datasets = [
+                {
+                    label: 'Voltage (V)',
+                    data: voltageData,
+                    lineTension: 0.2,
+                    fill: false,
+                    borderColor: 'blue', // Color for Voltage line
+                    yAxisID: 'voltage-y-axis' // Assign to a specific Y-axis
+                },
+                {
+                    label: 'Current (A)',
+                    data: currentData,
+                    lineTension: 0.2,
+                    fill: false,
+                    borderColor: 'red', // Color for Current line
+                    yAxisID: 'current-y-axis' // Assign to a specific Y-axis
+                }
+            ];
+            
+            // --- Prepare Chart.js options for dual Y-axes ---
+            // You might want to calculate min/max for each dataset for better scaling
+            let minVoltage = getMin(voltageData);
+            let maxVoltage = getMax(voltageData);
+            let minCurrent = getMin(currentData);
+            let maxCurrent = getMax(currentData);
+            
+            // Add some padding to the scales
+            let voltagePadding = (maxVoltage - minVoltage) * 0.1;
+            let currentPadding = (maxCurrent - minCurrent) * 0.1;
+            
+            // Handle cases where all values are the same or arrays are empty
+            if (voltageData.length === 0 || minVoltage === maxVoltage) {
+                minVoltage = 0; maxVoltage = 1; // Default range
+            } else {
+                minVoltage = Math.floor(minVoltage - voltagePadding);
+                maxVoltage = Math.ceil(maxVoltage + voltagePadding);
+            }
+            if (currentData.length === 0 || minCurrent === maxCurrent) {
+                minCurrent = 0; maxCurrent = 1; // Default range
+            } else {
+                minCurrent = Math.floor(minCurrent - currentPadding);
+                maxCurrent = Math.ceil(maxCurrent + currentPadding);
+            }
+        
+            lineChart.options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                title: {
+                    display: true,
+                    text: 'Battery Voltage and Current Over Time'
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Time'
+                        }
+                    }],
+                    yAxes: [
+                        {
+                            id: 'voltage-y-axis', // ID for Voltage axis
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Voltage (V)'
+                            },
+                            ticks: {
+                                min: minVoltage,
+                                max: maxVoltage,
+                                callback: function(value) {
+                                    return value + ' V';
+                                }
+                            }
+                        },
+                        {
+                            id: 'current-y-axis', // ID for Current axis
+                            type: 'linear',
+                            display: true,
+                            position: 'right', // Place on the right side
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Current (A)'
+                            },
+                            ticks: {
+                                min: minCurrent,
+                                max: maxCurrent,
+                                callback: function(value) {
+                                    return value + ' A';
+                                }
+                            },
+                            gridLines: {
+                                drawOnChartArea: false, // Only draw grid lines for the left Y-axis
+                            },
+                        }
+                    ]
+                }
+            };
+        
+            // --- Update Chart Data ---
+            lineChart.data.labels = timeLabels;
+            lineChart.data.datasets = datasets;
+            lineChart.update(); // Redraw the chart
+        }
+
+
 
         function descargar() {
 
@@ -423,10 +611,9 @@
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            let s1 = document.getElementById("selCant").value;
-            let s2 = document.getElementById("selMed").value;
-            console.log(s1, s2);
-            let name = "informe_" + s2 + "_" + s1 + ".csv";
+            let tabla = document.getElementById("selTab").value;
+   
+            let name = "informe_" + tabla + ".csv";
             link.setAttribute("download", name);
             document.body.appendChild(link);
             link.click(); // This will download the CSV file named "products.csv". 
